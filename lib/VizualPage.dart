@@ -17,6 +17,29 @@ class _GraphScreenState extends State<GraphScreen> {
   List<String> path = [];
   int totalDistance = 0;
   final double padding = 50.0; // Padding qiymati
+  String? selectedNode; // 📌 Hozir tanlangan tugun
+
+  void _handlePanStart(DragStartDetails details) {
+    Offset position = details.localPosition - Offset(padding, padding);
+    for (var entry in nodes.entries) {
+      if ((entry.value - position).distance < 20) {
+        selectedNode = entry.key; // 📌 Agar tugun bosilgan bo‘lsa, saqlaymiz
+        break;
+      }
+    }
+  }
+
+  void _handlePanUpdate(DragUpdateDetails details) {
+    if (selectedNode != null) {
+      setState(() {
+        nodes[selectedNode!] = details.localPosition - Offset(padding, padding);
+      });
+    }
+  }
+
+  void _handlePanEnd(DragEndDetails details) {
+    selectedNode = null; // 📌 Harakat tugagach, tugunni tanlashni bekor qilamiz
+  }
 
   void addNode(String label) {
     if (!nodes.containsKey(label)) {
@@ -223,12 +246,18 @@ class _GraphScreenState extends State<GraphScreen> {
                           width: 1000,
                           height: 800,
                           color: Colors.white,
-                          child: CustomPaint(
-                            painter: GraphPainter(
-                              nodes,
-                              edges,
-                              path,
-                              padding: padding,
+                          child: GestureDetector(
+                            onTapUp: _handleTap, // ✅ Tugun bosilganda o‘chirish uchun
+                            onPanStart: _handlePanStart, // ✅ Tugunni bosish
+                            onPanUpdate: _handlePanUpdate, // ✅ Tugunni harakatlantirish
+                            onPanEnd: _handlePanEnd, // ✅ Tugunni qo‘yish
+                            child: CustomPaint(
+                              painter: GraphPainter(
+                                nodes,
+                                edges,
+                                path,
+                                padding: padding,
+                              ),
                             ),
                           ),
                         ),
